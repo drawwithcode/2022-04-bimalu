@@ -92,7 +92,6 @@ function welcomeScreen() {
   image(shakeIcon, width/4-40, height/8+320, 130, 130);
   image(dragIcon, width/2+15, height/8+320, 130, 130)
 
-  text("Press start when you're ready!", width/2, height/2+200);
   //'start' button
   fill(textColor);
   rect(width/2, height/2+280, 150, 50);

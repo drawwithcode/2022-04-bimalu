@@ -1,130 +1,151 @@
-let permissionGranted = false;
+let start = false; //welcome screen
+let isMobile; //check for mobile device
 let mic;
-let mode;
-let rainbow;
-let hue;
-let rate = 1;
+let circleX, circleY;
+let circleColor; //rainbow brush
+let circleHue = 0; //rainbow brush
+let circleChanging = true; //changing brush color
+let backgroundColor;
+//instruction icons
+let drawIcon;
+let shakeIcon;
+let micIcon;
+let dragIcon;
+//initial circle size
+let circleSize = 5;
+//rainbow text
+let textColor;
+let textHue = 0;
+
+
+function preload(){
+  //instruction icons
+  drawIcon = loadImage("./assets/draw.png");
+  shakeIcon = loadImage("./assets/shake.png");
+  micIcon = loadImage("./assets/mic.png");
+  dragIcon = loadImage("./assets/drag.png");
+}
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-
-  //for eventual movement
-  cx = width / 2;
-  cy = height / 2;
-
-  //for landing pages
-  mode = 0;
-
-  //for rainbow brush
-  hue = 0;
-
-  setShakeThreshold(10);
-
-  //for devices that ask permission and don't, learnt from "designers do code" on youtube
-  if (DeviceOrientationEvent && DeviceOrientationEvent.requestPermission) {
-    DeviceOrientationEvent.requestPermission();
+  //check if mobile device
+  if(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+    isMobile = true;
+  } else {
+    isMobile = false;
   }
-
-  DeviceOrientationEvent.requestPermission()
-    .catch(() => {
-      button = createButton("click to allow access to sensors");
-      button.style("font-size", "24px");
-      button.center();
-      button.mousePressed(requestAccess);
-      throw error;
-    })
-    .then(() => {
-      permissionGranted = true;
-    });
-}
-
-function requestAccess() {
-  DeviceOrientationEvent.requestPermission()
-    .then((response) => {
-      if (response == "granted") {
-        permissionGranted = true;
-      } else {
-        permissionGranted = false;
-      }
-    })
-    .catch(console.error);
-  this.remove();
+  //mic sound input
+  mic = new p5.AudioIn();
+  mic.start();
+  circleX = width/2;
+  circleY = height/2;
+  //rainbow brush and text
+  circleColor = color(circleHue, 100, 100);
+  textColor = color(textHue,100,100);
+  backgroundColor = color(255);
+  angleMode(DEGREES);
+  rectMode(CENTER);
+  background(backgroundColor);
 }
 
 function draw() {
-  clear();
-
-  if (!permissionGranted) return;
-  if (permissionGranted) {
-    mode = +1;
+  //if it is a mobile device start experience
+  if (isMobile) {
+  if (!start) {
+    welcomeScreen();
+  } else {
+    drawing();
   }
+} else {
+  //if it is not a mobile device show message
+  background('black')
+  textSize(32);
+  textAlign(CENTER, CENTER);
+  textHue = (textHue + 1) % 360;
+  textColor = color(`hsl(${textHue}, 100%, 50%)`)
+  fill(textColor);
+  textFont("Coming Soon")
+  text("Oh no! It's no fun over here, you need to access this with a phone.", width/2, height/2);
+}
+}
 
-  touchAmount = touches.length;
-  //after permission, welcoming screen
-  if (mode == 1) {
-    noStroke();
-    fill("orange");
-    textFont("Open Sans");
-    textSize(36);
-    textAlign(CENTER);
-    fill("ivory");
-    text("Welcome!");
-    textSize(24);
-    text(
-      "Are you ready to compose your drawing? You have to prep your voice... and when you are ready"
-    );
-    textSize(36);
-    text("just shake your phone!");
-  }
+//instruction screen before starting experience
+function welcomeScreen() {
+  background('black')
+  textFont("Coming Soon")
+  textSize(32);
+  textAlign(CENTER, CENTER);
+  //rainbow fill for the text
+  textHue = (textHue + 1) % 360;
+  textColor = color(`hsl(${textHue}, 100%, 50%)`)
+  fill(textColor);
+  text("Welcome!", width/2, height/8);
+  textSize(18);
+  fill('white');
+  text("If you enjoy drawing", width/2, height/8+50);
+  text("and like a little creativity,", width/2, height/8+80);
+  text("then you are in the right place...", width/2, height/8+110);
 
-  //after welcoming screen, drawing board
-  if (mode >= 1) {
-    background("ivory");
+  //instruction icons
+  image(drawIcon, width/4-40, height/8+160, 130, 130);
+  image(micIcon, width/2+15, height/8+160, 130, 130);
+  image(shakeIcon, width/4-40, height/8+320, 130, 130);
+  image(dragIcon, width/2+15, height/8+320, 130, 130)
 
-    //contrain() learnt from "designers do code" on Youtube, determines highest and lowest limits for a specific value
-    const dx = constrain(rotationY, -3, 3);
-    const dy = constrain(rotationX, -3, 3);
-    cx += dx * 2;
-    cy += dy * 2;
-    cx = constrain(cx, 0, width);
-    cy = constrain(cy, 0, height);
+  text("Press start when you're ready!", width/2, height/2+200);
+  //'start' button
+  fill(textColor);
+  rect(width/2, height/2+280, 150, 50);
+  fill(0);
+  textSize(18);
+  text("Start", width/2, height/2+282);
+}
 
-    //using the mic to change size of the ellipses based on volume of audio caught by the mic
-    if (mic) {
-      const micLevel = mic.getLevel();
-      let d = map(micLevel, 0.5, 6, width);
-    }
-
-    //rainbow brush that changes by itself, this is to ensure that it doesnt stop at a single color when done but starts all over again
-    if (hue > 360) {
-      hue = 0;
-    } else {
-      hue++;
-    }
-
-    //creating ellipses to become the brush stroke
-    colorMode(HSL, 360);
-    noStroke();
-    fill(hue, 200, 200);
-    ellipse(cx, cy, d);
-
-    //to clear canvas when wanting to start over
-    //if (touchAmount == 2) {
-    //clear();
-    //}
+//if the button is pressed the canvas is cleared
+function touchStarted() {
+  if (mouseX > width/2 - 75 && mouseX < width/2 + 75 && mouseY > height/2 + 105 && mouseY < height/2 + 355) {
+    start = true;
+    clear();
+    //time delay after button is pressed before the drawing experience
+    setTimeout(drawing, 2000);
   }
 }
 
-function touchEnded() {
-  userStartAudio();
-  mic = new p5.AudioIn();
-  mic.start();
+//drawing experience
+function drawing() {
+  //if statement to go from rainbow brush to random solid colours
+  if (circleChanging) {
+    //starting with rainbow brush
+    circleHue = (circleHue + 1) % 360;
+    circleColor = color(`hsl(${circleHue}, 100%, 50%)`);
+  }
+  fill(circleColor);
+  noStroke();
+  //creating circle to change size based on mic sound input and position based on device rotation
+  let vol = mic.getLevel();
+  circleSize = map(vol, 0, 1, 10, width);
+  ellipse(circleX, circleY, circleSize);
+  circleX += map(rotationY, -90, 90, -5, 5);
+  circleY += map(rotationX, -90, 90, -5, 5);
+  circleX = constrain(circleX, 0, width);
+  circleY = constrain(circleY, 0, height);
 }
 
-function windowResized() {
-  resizeCanvas(windowWidth, windowHeight);
+//changing circle colour based on touch
+function touchMoved() {
+  circleChanging = false;
+  circleColor = color(random(255), random(255), random(255));
 }
 
+//changing background colour when device is shaken
 function deviceShaken() {
-  mode = +1;
+  backgroundColor = color(random(255), random(255), random(255));
+  background(backgroundColor);
+}
+
+//requesting permission to access device orientation sensors for experience
+function touchEnded(event) {
+	if(DeviceOrientationEvent && DeviceOrientationEvent.requestPermission) {
+		DeviceOrientationEvent.requestPermission()
+	}
 }

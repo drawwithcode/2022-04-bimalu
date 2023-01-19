@@ -1,6 +1,5 @@
 let start = false; //welcome screen
 let isMobile; //check for mobile device
-let mic;
 let circleX, circleY;
 let circleColor; //rainbow brush
 let circleHue = 0; //rainbow brush
@@ -9,10 +8,9 @@ let backgroundColor; //changing background color
 //instruction icons
 let drawIcon;
 let shakeIcon;
-let micIcon;
 let dragIcon;
 //initial circle size
-let circleSize = 5;
+let circleSize = 10;
 //rainbow text
 let textColor;
 let textHue = 0;
@@ -22,7 +20,6 @@ function preload(){
   //instruction icons
   drawIcon = loadImage("./assets/draw.png");
   shakeIcon = loadImage("./assets/shake.png");
-  micIcon = loadImage("./assets/mic.png");
   dragIcon = loadImage("./assets/drag.png");
 }
 
@@ -34,9 +31,7 @@ function setup() {
   } else {
     isMobile = false;
   }
-  //mic sound input
-  mic = new p5.AudioIn();
-  mic.start();
+
   circleX = width/2;
   circleY = height/2;
   //rainbow brush and text
@@ -87,9 +82,8 @@ function welcomeScreen() {
   text("then you are in the right place...", width/2, height/8+110);
 
   //instruction icons
-  image(drawIcon, width/4-40, height/8+160, 130, 130);
-  image(micIcon, width/2+15, height/8+160, 130, 130);
-  image(shakeIcon, width/4-40, height/8+320, 130, 130);
+  image(drawIcon, width/2-65, height/8+160, 130, 130);
+  image(shakeIcon, width/4-45, height/8+320, 130, 130);
   image(dragIcon, width/2+15, height/8+320, 130, 130)
 
   //'start' button
@@ -120,9 +114,7 @@ function drawing() {
   }
   fill(circleColor);
   noStroke();
-  //creating circle to change size based on mic sound input and position based on device rotation
-  let vol = mic.getLevel();
-  circleSize = map(vol, 0, 1, 10, width);
+  //creating circle to move based on device orientation
   ellipse(circleX, circleY, circleSize);
   circleX += map(rotationY, -90, 90, -5, 5);
   circleY += map(rotationX, -90, 90, -5, 5);

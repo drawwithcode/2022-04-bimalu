@@ -5,7 +5,7 @@ let circleX, circleY;
 let circleColor; //rainbow brush
 let circleHue = 0; //rainbow brush
 let circleChanging = true; //changing brush color
-let backgroundColor;
+let backgroundColor; //changing background color
 //instruction icons
 let drawIcon;
 let shakeIcon;
